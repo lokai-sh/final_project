@@ -1,4 +1,4 @@
-package com.example.final_project.presenter;
+package com.example.photoApp.presenter;
 
 import android.media.ExifInterface;
 import android.os.Build;
@@ -83,7 +83,7 @@ private final View view;
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ArrayList<String> findPhotos(Date startTimestamp, Date endTimestamp, Double[] coordinates, int radius, String keywords) {
         File file = new File(Environment.getExternalStorageDirectory()
-                .getAbsolutePath(), "/Android/data/com.example.final_project/files/Pictures");
+                .getAbsolutePath(), "/Android/data/com.example.photoApp/files/Pictures");
         ArrayList<String> photos = new ArrayList<String>();
         if (file.listFiles() != null){
             ArrayList<File> fList = new ArrayList<File>(Arrays.asList(Objects.requireNonNull(file.listFiles())));

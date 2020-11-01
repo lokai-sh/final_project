@@ -1,4 +1,4 @@
-package com.example.final_project.view;
+package com.example.photoApp.view;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,9 +22,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.final_project.LogAnnotation;
-import com.example.final_project.R;
-import com.example.final_project.presenter.MainActivityPresenter;
+import com.example.photoApp.LogAnnotation;
+import com.example.photoApp.R;
+import com.example.photoApp.presenter.MainActivityPresenter;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
 
         try {
             File file = new File(photos.get(index));
-            Uri bmpUri = FileProvider.getUriForFile(this, "com.example.final_project.fileprovider", file);
+            Uri bmpUri = FileProvider.getUriForFile(this, "com.example.photoApp.fileprovider", file);
             //Todo: Commenting this out for now, uncomment it to show it the Caption as well, works on Twitter
 //            EditText mEdit   = (EditText)findViewById(R.id.etCaption);
 //            String text = mEdit.getText().toString();
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         }
         // Continue only if the File was successfully created
         if (photoFile != null) {
-            Uri photoURI = FileProvider.getUriForFile(this, "com.example.final_project.fileprovider", photoFile);
+            Uri photoURI = FileProvider.getUriForFile(this, "com.example.photoApp.fileprovider", photoFile);
             takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             new AlertDialog.Builder(this)

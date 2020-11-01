@@ -1,4 +1,4 @@
-package com.example.final_project.model;
+package com.example.photoApp.model;
 
 import android.util.Log;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -10,7 +10,7 @@ public class LogAspect {
     private static final String TAG = LogAspect.class.getName();
 
     private static final String POINTCUT_METHOD =
-            "execution(@com.example.final_project.LogAnnotation * *(..))";
+            "execution(@com.example.photoApp.LogAnnotation * *(..))";
 
     @Pointcut(POINTCUT_METHOD)
     public void onLogPoint() {}
@@ -20,7 +20,7 @@ public class LogAspect {
         Log.d(TAG, "Do Something Before Logging Annotation Point");
     }
 
-    @Around("execution(* *(..)) && @annotation(com.example.final_project.LogAnnotation)")
+    @Around("execution(* *(..)) && @annotation(com.example.photoApp.LogAnnotation)")
     public void onLogPointAround(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         MethodSignature ms = ((MethodSignature) proceedingJoinPoint.getSignature());
         String methodName = ms.getMethod().getName();

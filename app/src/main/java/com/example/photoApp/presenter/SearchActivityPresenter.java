@@ -1,6 +1,6 @@
-package com.example.final_project.presenter;
+package com.example.photoApp.presenter;
 
-import com.example.final_project.view.SearchActivity;
+import com.example.photoApp.view.SearchActivity;
 
 import java.text.DateFormat;
 import java.text.ParseException;

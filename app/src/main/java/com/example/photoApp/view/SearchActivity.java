@@ -1,4 +1,4 @@
-package com.example.final_project.view;
+package com.example.photoApp.view;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -7,9 +7,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
-import com.example.final_project.LogAnnotation;
-import com.example.final_project.R;
-import com.example.final_project.presenter.SearchActivityPresenter;
+import com.example.photoApp.LogAnnotation;
+import com.example.photoApp.R;
+import com.example.photoApp.presenter.SearchActivityPresenter;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

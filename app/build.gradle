@@ -11,7 +11,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.final_project"
+        applicationId "com.example.photoApp"
         minSdkVersion 16
         targetSdkVersion 30
         versionCode 1

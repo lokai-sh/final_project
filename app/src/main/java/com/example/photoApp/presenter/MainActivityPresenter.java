@@ -81,7 +81,7 @@ private final View view;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public ArrayList<String> findPhotos(Date startTimestamp, Date endTimestamp, Double[] coordinates, int radius, String keywords) {
+    public ArrayList<String> findPhotos(Date startTimestamp, Date endTimestamp, String keywords) {
         File file = new File(Environment.getExternalStorageDirectory()
                 .getAbsolutePath(), "/Android/data/com.example.photoApp/files/Pictures");
         ArrayList<String> photos = new ArrayList<String>();
@@ -89,27 +89,6 @@ private final View view;
             ArrayList<File> fList = new ArrayList<File>(Arrays.asList(Objects.requireNonNull(file.listFiles())));
             // Functional lambda expression
             fList.forEach(f -> {
-                if (coordinates != null) {
-                    try {
-                        ExifInterface exif = new ExifInterface(f.getAbsolutePath());
-                        String lat = exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE);
-                        String latRef = exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE_REF);
-                        String lng = exif.getAttribute(ExifInterface.TAG_GPS_LONGITUDE);
-                        String lngRef = exif.getAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF);
-                        if (lat == null || lng == null || latRef == null || lngRef == null) {
-                            return;
-                        }
-                        Double[] fileCoordinates = {0.0, 0.0};
-                        fileCoordinates[0] = getParsedCoordinates(lat, latRef.equals("S"));
-                        fileCoordinates[1] = getParsedCoordinates(lng, lngRef.equals("W"));
-                        System.out.println(distance(fileCoordinates, coordinates));
-                        if (!(distance(fileCoordinates, coordinates) < radius * 1000)) {
-                            return;
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
                 if (((startTimestamp == null && endTimestamp == null) || (f.lastModified() >= startTimestamp.getTime()
                         && f.lastModified() <= endTimestamp.getTime())
                 ) && (keywords.equals("") || f.getPath().contains(keywords)))

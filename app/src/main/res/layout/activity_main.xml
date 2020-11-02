@@ -1,124 +1,162 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/constraintLayoutLayout"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginLeft="5dp"
-    android:layout_marginRight="5dp"
+    android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".view.MainActivity">
+    tools:context=".view.MainActivity"
+    tools:layout_editor_absoluteX="5dp">
+
 
     <ImageView
         android:id="@+id/ivGallery"
         android:layout_width="359dp"
         android:layout_height="196dp"
-        android:layout_marginTop="10dp"
-        android:contentDescription="Current Displayed Image" />
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="32dp"
+        android:contentDescription="Current Displayed Image"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tvTimestamp"
-        android:layout_width="171dp"
-        android:layout_height="33dp"
-        android:text="" />
+        android:layout_width="209dp"
+        android:layout_height="35dp"
+        android:layout_marginTop="68dp"
+        android:layout_marginEnd="28dp"
+        android:layout_marginRight="28dp"
+        android:text=""
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery" />
 
     <TextView
         android:id="@+id/captionLabel"
-        android:layout_width="55dp"
-        android:layout_height="33dp"
-        android:layout_marginStart="6dp"
-        android:layout_marginLeft="40dp"
-        android:layout_marginTop="-12dp"
-        android:layout_marginEnd="55dp"
-        android:layout_marginRight="55dp"
-        android:text="Caption:" />
+        android:layout_width="113dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="20dp"
+        android:text="Caption:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery" />
 
     <EditText
         android:id="@+id/etCaption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="11dp"
-        android:layout_marginLeft="11dp"
-        android:layout_marginTop="9dp"
+        android:layout_marginStart="28dp"
+        android:layout_marginLeft="28dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
         android:ems="10"
         android:hint="Caption"
         android:inputType="textPersonName"
         android:text=""
-        tools:layout_editor_absoluteX="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/captionLabel"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery"
         tools:ignore="Autofill" />
 
-    <TextView
-        android:id="@+id/tvLatitude"
-        android:layout_width="match_parent"
-        android:layout_height="33dp" />
-
-    <TextView
-        android:id="@+id/tvLongitude"
-        android:layout_width="match_parent"
-        android:layout_height="33dp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
+    <Button
+        android:id="@+id/btnNext"
+        android:layout_width="95dp"
+        android:layout_height="45dp"
+        android:layout_marginTop="128dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
         android:layout_weight="1"
-        android:orientation="horizontal">
+        android:onClick="scrollPhotos"
+        android:text="next"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/btnPrev"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery"
+        tools:ignore="ButtonStyle" />
 
-        <Button
-            android:id="@+id/btnPrev"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="scrollPhotos"
-            android:text="prev"
-            tools:layout_editor_absoluteX="0dp"
-            tools:layout_editor_absoluteY="622dp"
-            tools:ignore="ButtonStyle" />
+    <Button
+        android:id="@+id/shareButton"
+        android:layout_width="95dp"
+        android:layout_height="45dp"
+        android:layout_marginTop="200dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_weight="1"
+        android:text="Share"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/snap"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery"
+        tools:ignore="ButtonStyle" />
 
-        <Button
-            android:id="@+id/btnNext"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="scrollPhotos"
-            android:text="next"
-            tools:ignore="ButtonStyle" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
+    <Button
+        android:id="@+id/btnSearch"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:orientation="horizontal">
+        android:layout_marginTop="244dp"
+        android:layout_marginEnd="160dp"
+        android:layout_marginRight="160dp"
+        android:layout_weight="1"
+        android:text="search"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery"
+        tools:ignore="ButtonStyle" />
 
-        <Button
-            android:id="@+id/snap"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="takePhoto"
-            android:text="snap"
-            tools:ignore="ButtonStyle" />
+    <TextView
+        android:id="@+id/timestampLabel"
+        android:layout_width="106dp"
+        android:layout_height="38dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="68dp"
+        android:text="Timestamp:"
+        app:layout_constraintEnd_toStartOf="@+id/tvTimestamp"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery" />
 
-        <Button
-            android:id="@+id/shareButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="sharingToSocialMedia"
-            android:text="Share"
-            tools:ignore="ButtonStyle" />
+    <Button
+        android:id="@+id/snap"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="200dp"
+        android:layout_weight="1"
+        android:text="snap"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery"
+        tools:ignore="ButtonStyle" />
 
-        <Button
-            android:id="@+id/btnSearch"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="searchPhoto"
-            android:text="search"
-            tools:layout_editor_absoluteX="291dp"
-            tools:layout_editor_absoluteY="635dp"
-            tools:ignore="ButtonStyle" />
-    </LinearLayout>
+    <Button
+        android:id="@+id/btnPrev"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="128dp"
+        android:layout_weight="1"
+        android:onClick="scrollPhotos"
+        android:text="prev"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery"
+        tools:ignore="ButtonStyle" />
+
+    <ImageView
+        android:id="@+id/imageView_mic"
+        android:layout_width="63dp"
+        android:layout_height="91dp"
+        android:layout_marginStart="172dp"
+        android:layout_marginLeft="172dp"
+        android:layout_marginTop="132dp"
+        android:onClick="getSpeechInput"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery"
+        app:srcCompat="@drawable/mic_image" />
+</androidx.constraintlayout.widget.ConstraintLayout>
 
 
-</LinearLayout>
+

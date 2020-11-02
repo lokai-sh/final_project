@@ -16,7 +16,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.speech.RecognizerIntent;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.TranslateAnimation;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -34,7 +41,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements MainActivityPresenter.View {
+public class MainActivity extends AppCompatActivity implements MainActivityPresenter.View, GestureDetector.OnGestureListener {
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int SEARCH_ACTIVITY_REQUEST_CODE = 2;
@@ -42,7 +49,17 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
     private ArrayList<String> photos = null;
     private int index = 0;
 
+    private static final int SWIPE_MIN_DISTANCE = 120;
+    private static final int SWIPE_MAX_OFF_PATH = 250;
+    private static final int SWIPE_VELOCITY_THRESHOLD = 200;
+
+    Button btn_camera, btn_upload, btn_search;
+
+    // Animation
+    Animation animMove;
+
     private MainActivityPresenter mPresenter;
+    private GestureDetector gestureScanner;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @LogAnnotation
@@ -50,7 +67,25 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // load the animation
+        animMove = AnimationUtils.loadAnimation(getApplicationContext(),
+                R.anim.move);
+        animMove.reset();
+
         mPresenter = new MainActivityPresenter(this);
+
+        gestureScanner = new GestureDetector(getBaseContext(), this);
+
+        //  button to upload the image to social media
+        btn_upload = findViewById(R.id.shareButton);
+        btn_upload.setOnClickListener(v -> sharingToSocialMedia());
+
+        btn_search = findViewById(R.id.btnSearch);
+        btn_search.setOnClickListener(v -> searchPhoto());
+
+        btn_camera= findViewById(R.id.snap);
+        btn_camera.setOnClickListener(v -> takePhoto());
 
         photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(), null, 0, "");
 
@@ -79,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         }
     }
 
-    public void sharingToSocialMedia(View v) {
+    public void sharingToSocialMedia() {
 
         try {
             File file = new File(photos.get(index));
@@ -103,12 +138,12 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
     }
 
     @LogAnnotation
-    public void searchPhoto(View view) {
+    public void searchPhoto() {
         Intent searchIntent = new Intent(this, SearchActivity.class);
         startActivityForResult(searchIntent, SEARCH_ACTIVITY_REQUEST_CODE);
     }
 
-    public void takePhoto(View v) {
+    public void takePhoto() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there is a camera activity to handle the intent
         //Todo: Commenting this out for now to allow pictures to work. Not sure why it is always null
@@ -138,34 +173,53 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
             updatePhoto(photos.get(index), ((EditText) findViewById(R.id.etCaption)).getText().toString());
             switch (v.getId()) {
                 case R.id.btnPrev:
-                    if (index > 0) {
-                        index--;
-                    }
+                    scrollImageToPrevious();
                     break;
                 case R.id.btnNext:
-                    if (index < (photos.size() - 1)) {
-                        index++;
-                    }
+                    scrollImageToNext();
                     break;
                 default:
                     break;
             }
-            displayPhoto(photos.get(index));
         }
+    }
+
+    public void scrollImageToNext() {
+        if (index < (photos.size() - 1)) {
+            index++;
+        }
+
+        ImageView iv = (ImageView) findViewById(R.id.ivGallery);
+        iv.startAnimation(animMove);
+
+        displayPhoto(photos.get(index));
+    }
+
+    public void scrollImageToPrevious() {
+        if (index > 0) {
+            index--;
+        }
+        ImageView iv = (ImageView) findViewById(R.id.ivGallery);
+        TranslateAnimation animate = new TranslateAnimation(-iv.getWidth(), 0, 0, 0);
+        animate.setDuration(800);
+        animate.setFillAfter(true);
+        iv.startAnimation(animate);
+
+        displayPhoto(photos.get(index));
     }
 
     private void displayPhoto(String path) {
         ImageView iv = (ImageView) findViewById(R.id.ivGallery);
         TextView tv = (TextView) findViewById(R.id.tvTimestamp);
         EditText et = (EditText) findViewById(R.id.etCaption);
-        TextView tvLat = (TextView) findViewById(R.id.tvLatitude);
-        TextView tvLong = (TextView) findViewById(R.id.tvLongitude);
+       // TextView tvLat = (TextView) findViewById(R.id.tvLatitude);
+        //TextView tvLong = (TextView) findViewById(R.id.tvLongitude);
         if (path == null || path.equals("")) {
             iv.setImageResource(R.mipmap.ic_launcher);
             et.setText("");
             tv.setText("");
-            tvLat.setText("");
-            tvLong.setText("");
+           // tvLat.setText("");
+            //tvLong.setText("");
         } else {
             iv.setImageBitmap(BitmapFactory.decodeFile(path));
             String[] attr = path.split("_");
@@ -227,6 +281,39 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
             mImageView.setImageBitmap(BitmapFactory.decodeFile(mCurrentPhotoPath));
             photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(), null, 0, "");
         }
+        if(requestCode == 10){
+            if (resultCode == RESULT_OK && data != null) {
+                ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+
+                String command = result.get(0);
+
+                if (command.contains("next")) {
+                    scrollImageToNext();
+                } else if (command.contains("previous")) {
+                    scrollImageToPrevious();
+                } else if (command.contains("search")) {
+                    searchPhoto();
+                } else if (command.contains("snap")) {
+                    takePhoto();
+                } else if (command.contains("share")) {
+                    sharingToSocialMedia();
+                } else {
+                }
+            }
+        }
+    }
+
+    public void getSpeechInput(View view) {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Please give command");
+
+        try {
+            startActivityForResult(intent, 10);
+        } catch (Exception e) {
+            Toast.makeText(this, "Your Device Don't Support Speech Input", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void addLocationTagging(String path) {
@@ -241,9 +328,63 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
 
     @Override
     public void showLatitudeAndLongitude(Double latitude, Double longitude) {
-        TextView latitudeField = (TextView) findViewById(R.id.tvLatitude);
-        TextView longitudeField = (TextView) findViewById(R.id.tvLongitude);
-        latitudeField.setText(String.format(Locale.CANADA,"Latitude: %.6f",latitude));
-        longitudeField.setText(String.format(Locale.CANADA,"Longitude: %.6f",longitude));
+       // TextView latitudeField = (TextView) findViewById(R.id.tvLatitude);
+       // TextView longitudeField = (TextView) findViewById(R.id.tvLongitude);
+       // latitudeField.setText(String.format(Locale.CANADA,"Latitude: %.6f",latitude));
+      //  longitudeField.setText(String.format(Locale.CANADA,"Longitude: %.6f",longitude));
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent me) {
+        return gestureScanner.onTouchEvent(me);
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        try {
+            if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH) {
+                return false;
+            }
+            // left to right swipe
+            if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE
+                    && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                scrollImageToPrevious();
+            }
+            // right to left swipe
+            else if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE
+                    && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                scrollImageToNext();
+            }
+
+        } catch (Exception e) {
+
+        }
+
+        return true;
     }
 }

@@ -61,50 +61,6 @@
         app:layout_constraintTop_toBottomOf="@+id/ivGallery"
         tools:ignore="Autofill" />
 
-    <Button
-        android:id="@+id/btnNext"
-        android:layout_width="95dp"
-        android:layout_height="45dp"
-        android:layout_marginTop="128dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
-        android:layout_weight="1"
-        android:onClick="scrollPhotos"
-        android:text="next"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@+id/btnPrev"
-        app:layout_constraintTop_toBottomOf="@+id/ivGallery"
-        tools:ignore="ButtonStyle" />
-
-    <Button
-        android:id="@+id/shareButton"
-        android:layout_width="95dp"
-        android:layout_height="45dp"
-        android:layout_marginTop="200dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
-        android:layout_weight="1"
-        android:text="Share"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@+id/snap"
-        app:layout_constraintTop_toBottomOf="@+id/ivGallery"
-        tools:ignore="ButtonStyle" />
-
-    <Button
-        android:id="@+id/btnSearch"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="244dp"
-        android:layout_marginEnd="160dp"
-        android:layout_marginRight="160dp"
-        android:layout_weight="1"
-        android:text="search"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ivGallery"
-        tools:ignore="ButtonStyle" />
-
     <TextView
         android:id="@+id/timestampLabel"
         android:layout_width="106dp"
@@ -119,12 +75,26 @@
         app:layout_constraintTop_toBottomOf="@+id/ivGallery" />
 
     <Button
+        android:id="@+id/btnPrev"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="112dp"
+        android:layout_weight="1"
+        android:onClick="scrollPhotos"
+        android:text="prev"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery"
+        tools:ignore="ButtonStyle" />
+
+    <Button
         android:id="@+id/snap"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginLeft="16dp"
-        android:layout_marginTop="200dp"
+        android:layout_marginTop="184dp"
         android:layout_weight="1"
         android:text="snap"
         app:layout_constraintStart_toStartOf="parent"
@@ -132,16 +102,68 @@
         tools:ignore="ButtonStyle" />
 
     <Button
-        android:id="@+id/btnPrev"
-        android:layout_width="0dp"
+        android:id="@+id/btnNext"
+        android:layout_width="95dp"
+        android:layout_height="45dp"
+        android:layout_marginTop="112dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_weight="1"
+        android:onClick="scrollPhotos"
+        android:text="next"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/btnPrev"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery"
+        tools:ignore="ButtonStyle" />
+
+    <Button
+        android:id="@+id/btnFavourite"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginLeft="16dp"
-        android:layout_marginTop="128dp"
-        android:layout_weight="1"
-        android:onClick="scrollPhotos"
-        android:text="prev"
+        android:layout_marginTop="252dp"
+        android:text="Favourite"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery" />
+
+    <Button
+        android:id="@+id/shareButton"
+        android:layout_width="95dp"
+        android:layout_height="45dp"
+        android:layout_marginTop="184dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_weight="1"
+        android:text="Share"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/snap"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery"
+        tools:ignore="ButtonStyle" />
+
+    <Button
+        android:id="@+id/btnRemove"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="252dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginRight="20dp"
+        android:text="Remove"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivGallery" />
+
+    <Button
+        android:id="@+id/btnSearch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="252dp"
+        android:layout_marginEnd="160dp"
+        android:layout_marginRight="160dp"
+        android:layout_weight="1"
+        android:text="search"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ivGallery"
         tools:ignore="ButtonStyle" />
 
@@ -151,11 +173,12 @@
         android:layout_height="91dp"
         android:layout_marginStart="172dp"
         android:layout_marginLeft="172dp"
-        android:layout_marginTop="132dp"
+        android:layout_marginTop="116dp"
         android:onClick="getSpeechInput"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ivGallery"
         app:srcCompat="@drawable/mic_image" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
 
 

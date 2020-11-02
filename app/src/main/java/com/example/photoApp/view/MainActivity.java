@@ -8,8 +8,12 @@ import androidx.core.content.FileProvider;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
@@ -31,8 +35,10 @@ import android.widget.Toast;
 
 import com.example.photoApp.LogAnnotation;
 import com.example.photoApp.R;
+import com.example.photoApp.model.DatabaseHelper;
 import com.example.photoApp.presenter.MainActivityPresenter;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -53,7 +59,12 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
     private static final int SWIPE_MAX_OFF_PATH = 250;
     private static final int SWIPE_VELOCITY_THRESHOLD = 200;
 
-    Button btn_camera, btn_upload, btn_search;
+    Button btn_camera, btn_upload, btn_search, btn_favourite, btn_remove;
+
+    DatabaseHelper mdb;
+    SQLiteDatabase db;
+    Cursor c;
+    byte[] img1;
 
     // Animation
     Animation animMove;
@@ -67,6 +78,9 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mdb = new DatabaseHelper(getApplicationContext(), "tempDB", null, 1);
+        this.deleteDatabase("tempDB");
 
         // load the animation
         animMove = AnimationUtils.loadAnimation(getApplicationContext(),
@@ -84,23 +98,86 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         btn_search = findViewById(R.id.btnSearch);
         btn_search.setOnClickListener(v -> searchPhoto());
 
-        btn_camera= findViewById(R.id.snap);
+        btn_camera = findViewById(R.id.snap);
         btn_camera.setOnClickListener(v -> takePhoto());
 
-        photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(), "");
+        btn_favourite = findViewById(R.id.btnFavourite);
+        btn_favourite.setOnClickListener(v -> SaveToSQLite());
+
+        btn_remove = findViewById(R.id.btnRemove);
+        btn_remove.setOnClickListener(v -> removeImageFromSDCard());
 
         checkPermissions();
 
+        updatePhotos();
+
+    }
+
+    private File removeImageFromSDCard() {
+        File file = new File(photos.get(index));
+        if (file.exists()) {
+            file.delete();
+
+            // Continue only if the File was successfully created
+            Toast.makeText(getApplicationContext(), "This image has been removed from the SD Card",
+                    Toast.LENGTH_SHORT).show();
+            index = 0;
+            updatePhotos();
+
+        } else {
+            Toast.makeText(getApplicationContext(), "File not found",
+                    Toast.LENGTH_SHORT).show();
+        }
+
+        return file;
+    }
+
+    private void updatePhotos() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(), "");
+        }
         if (photos.size() == 0) {
             displayPhoto(null);
         } else {
             displayPhoto(photos.get(index));
         }
+    }
 
+    private void SaveToSQLite() {
+        try {
+            Bitmap b = BitmapFactory.decodeResource(getResources(), Integer.parseInt(photos.get(index)));
+            ImageView iv = (ImageView) findViewById(R.id.ivGallery);
+            b = Bitmap.createScaledBitmap(b, (int) (b.getWidth() * 0.2), (int) (b.getHeight() * 0.2), true);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            b.compress(Bitmap.CompressFormat.PNG, 100, bos);
+            byte[] byteImage = bos.toByteArray();
+
+            //to write in a database
+            db = mdb.getWritableDatabase();
+            ContentValues cv = new ContentValues();
+            cv.put("name", "temp" + index + ".png");
+            cv.put("image", byteImage);
+            db.insert("tableimage", null, cv);
+            String selectQuery = "SELECT * FROM tableimage";
+            c = db.rawQuery(selectQuery, null);
+            if (c != null) {
+                c.moveToFirst();
+                do {
+                    img1 = c.getBlob(1);
+                    String name = c.getString(0);
+                } while (c.moveToNext());
+            }
+            Bitmap b1 = BitmapFactory.decodeByteArray(img1, 0, img1.length);
+            iv.setImageBitmap(b1);
+            Toast.makeText(getApplicationContext(), "This image has been saved to the Android SQLite database",
+                    Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 
-    private void checkPermissions(){
+    private void checkPermissions() {
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{
                     Manifest.permission.CAMERA
@@ -265,9 +342,9 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             ImageView mImageView = (ImageView) findViewById(R.id.ivGallery);
             mImageView.setImageBitmap(BitmapFactory.decodeFile(mCurrentPhotoPath));
-            photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(),"");
+            photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(), "");
         }
-        if(requestCode == 10){
+        if (requestCode == 10) {
             if (resultCode == RESULT_OK && data != null) {
                 ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 
@@ -283,7 +360,12 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
                     takePhoto();
                 } else if (command.contains("share")) {
                     sharingToSocialMedia();
+                } else if (command.contains("favourite")) {
+                    SaveToSQLite();
+                } else if (command.contains("remove")) {
+                    removeImageFromSDCard();
                 } else {
+
                 }
             }
         }
@@ -309,15 +391,15 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
 
     @Override
     public void updatePhoto(String path, String caption) {
-        mPresenter.updatePhoto(path,caption,photos,index);
+        mPresenter.updatePhoto(path, caption, photos, index);
     }
 
     @Override
     public void showLatitudeAndLongitude(Double latitude, Double longitude) {
-       // TextView latitudeField = (TextView) findViewById(R.id.tvLatitude);
-       // TextView longitudeField = (TextView) findViewById(R.id.tvLongitude);
-       // latitudeField.setText(String.format(Locale.CANADA,"Latitude: %.6f",latitude));
-      //  longitudeField.setText(String.format(Locale.CANADA,"Longitude: %.6f",longitude));
+        // TextView latitudeField = (TextView) findViewById(R.id.tvLatitude);
+        // TextView longitudeField = (TextView) findViewById(R.id.tvLongitude);
+        // latitudeField.setText(String.format(Locale.CANADA,"Latitude: %.6f",latitude));
+        //  longitudeField.setText(String.format(Locale.CANADA,"Longitude: %.6f",longitude));
     }
 
     @Override

@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         btn_camera= findViewById(R.id.snap);
         btn_camera.setOnClickListener(v -> takePhoto());
 
-        photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(), null, 0, "");
+        photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(), "");
 
         checkPermissions();
 
@@ -212,14 +212,10 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         ImageView iv = (ImageView) findViewById(R.id.ivGallery);
         TextView tv = (TextView) findViewById(R.id.tvTimestamp);
         EditText et = (EditText) findViewById(R.id.etCaption);
-       // TextView tvLat = (TextView) findViewById(R.id.tvLatitude);
-        //TextView tvLong = (TextView) findViewById(R.id.tvLongitude);
         if (path == null || path.equals("")) {
             iv.setImageResource(R.mipmap.ic_launcher);
             et.setText("");
             tv.setText("");
-           // tvLat.setText("");
-            //tvLong.setText("");
         } else {
             iv.setImageBitmap(BitmapFactory.decodeFile(path));
             String[] attr = path.split("_");
@@ -256,19 +252,9 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
                     startTimestamp = null;
                     endTimestamp = null;
                 }
-                Double[] coordinates = null;
-                int radius = 0;
-                try {
-                    double longitude = data.getDoubleExtra("LONGITUDE", 0.0);
-                    double latitude = data.getDoubleExtra("LATITUDE", 0.0);
-                    radius = Integer.parseInt(String.valueOf(data.getIntExtra("RADIUS", 0)));
-                    if (longitude != 0.0 && latitude != 0.0 && radius != 0){
-                        coordinates = new Double[]{latitude, longitude};
-                    }
-                } catch (Exception e){}
                 String keywords = (String) data.getStringExtra("KEYWORDS");
                 index = 0;
-                photos = mPresenter.findPhotos(startTimestamp, endTimestamp, coordinates, radius, keywords);
+                photos = mPresenter.findPhotos(startTimestamp, endTimestamp, keywords);
                 if (photos.size() == 0) {
                     displayPhoto(null);
                 } else {
@@ -279,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             ImageView mImageView = (ImageView) findViewById(R.id.ivGallery);
             mImageView.setImageBitmap(BitmapFactory.decodeFile(mCurrentPhotoPath));
-            photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(), null, 0, "");
+            photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(),"");
         }
         if(requestCode == 10){
             if (resultCode == RESULT_OK && data != null) {

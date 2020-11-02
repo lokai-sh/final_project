@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         btn_camera.setOnClickListener(v -> takePhoto());
 
         btn_favourite = findViewById(R.id.btnFavourite);
-        btn_favourite.setOnClickListener(v -> SaveToSQLite());
+        btn_favourite.setOnClickListener(v -> saveToSQLiteDatabase());
 
         btn_remove = findViewById(R.id.btnRemove);
         btn_remove.setOnClickListener(v -> removeImageFromSDCard());
@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         if (file.exists()) {
             file.delete();
 
-            // Continue only if the File was successfully created
+            // Continue only if the File was successfully deleted
             Toast.makeText(getApplicationContext(), "This image has been removed from the SD Card",
                     Toast.LENGTH_SHORT).show();
             index = 0;
@@ -143,13 +143,10 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         }
     }
 
-    private void SaveToSQLite() {
+    private void saveToSQLiteDatabase() {
         try {
-            Bitmap b = BitmapFactory.decodeResource(getResources(), Integer.parseInt(photos.get(index)));
-            ImageView iv = (ImageView) findViewById(R.id.ivGallery);
-            b = Bitmap.createScaledBitmap(b, (int) (b.getWidth() * 0.2), (int) (b.getHeight() * 0.2), true);
+            // ImageView iv = (ImageView) findViewById(R.id.ivGallery);
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            b.compress(Bitmap.CompressFormat.PNG, 100, bos);
             byte[] byteImage = bos.toByteArray();
 
             //to write in a database
@@ -167,8 +164,8 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
                     String name = c.getString(0);
                 } while (c.moveToNext());
             }
-            Bitmap b1 = BitmapFactory.decodeByteArray(img1, 0, img1.length);
-            iv.setImageBitmap(b1);
+            //Bitmap b1 = BitmapFactory.decodeByteArray(img1, 0, img1.length);
+            //iv.setImageBitmap(b1);
             Toast.makeText(getApplicationContext(), "This image has been saved to the Android SQLite database",
                     Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
@@ -361,7 +358,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
                 } else if (command.contains("share")) {
                     sharingToSocialMedia();
                 } else if (command.contains("favourite")) {
-                    SaveToSQLite();
+                    saveToSQLiteDatabase();
                 } else if (command.contains("remove")) {
                     removeImageFromSDCard();
                 } else {

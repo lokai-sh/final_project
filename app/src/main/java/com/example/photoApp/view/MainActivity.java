@@ -1,10 +1,13 @@
 package com.example.photoApp.view;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -13,7 +16,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
@@ -22,6 +24,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.speech.RecognizerIntent;
 import android.view.GestureDetector;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
@@ -36,7 +39,9 @@ import android.widget.Toast;
 import com.example.photoApp.LogAnnotation;
 import com.example.photoApp.R;
 import com.example.photoApp.model.DatabaseHelper;
+import com.example.photoApp.presenter.HomeFragment;
 import com.example.photoApp.presenter.MainActivityPresenter;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -47,7 +52,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements MainActivityPresenter.View, GestureDetector.OnGestureListener {
+public class MainActivity<file> extends AppCompatActivity implements MainActivityPresenter.View, GestureDetector.OnGestureListener {
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int SEARCH_ACTIVITY_REQUEST_CODE = 2;
@@ -55,11 +60,13 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
     private ArrayList<String> photos = null;
     private int index = 0;
 
+    BottomNavigationView bottomNavigation;
+
     private static final int SWIPE_MIN_DISTANCE = 120;
     private static final int SWIPE_MAX_OFF_PATH = 250;
     private static final int SWIPE_VELOCITY_THRESHOLD = 200;
 
-    Button btn_camera, btn_upload, btn_search, btn_favourite, btn_remove;
+    Button btn_favourite, btn_remove;
 
     DatabaseHelper mdb;
     SQLiteDatabase db;
@@ -79,6 +86,10 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        bottomNavigation = findViewById(R.id.bottom_navigation);
+        bottomNavigation.setOnNavigationItemSelectedListener(navigationItemSelectedListener);
+        openFragment(HomeFragment.newInstance("", ""));
+
         mdb = new DatabaseHelper(getApplicationContext(), "tempDB", null, 1);
         this.deleteDatabase("tempDB");
 
@@ -91,21 +102,11 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
 
         gestureScanner = new GestureDetector(getBaseContext(), this);
 
-        //  button to upload the image to social media
-        btn_upload = findViewById(R.id.shareButton);
-        btn_upload.setOnClickListener(v -> sharingToSocialMedia());
-
-        btn_search = findViewById(R.id.btnSearch);
-        btn_search.setOnClickListener(v -> searchPhoto());
-
-        btn_camera = findViewById(R.id.snap);
-        btn_camera.setOnClickListener(v -> takePhoto());
-
-        btn_favourite = findViewById(R.id.btnFavourite);
-        btn_favourite.setOnClickListener(v -> saveToSQLiteDatabase());
-
-        btn_remove = findViewById(R.id.btnRemove);
-        btn_remove.setOnClickListener(v -> removeImageFromSDCard());
+//        btn_favourite = findViewById(R.id.btnFavourite);
+//        btn_favourite.setOnClickListener(v -> saveToSQLiteDatabase());
+//
+//        btn_remove = findViewById(R.id.btnRemove);
+//        btn_remove.setOnClickListener(v -> removeImageFromSDCard());
 
         checkPermissions();
 
@@ -113,24 +114,34 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
 
     }
 
-    private File removeImageFromSDCard() {
-        File file = new File(photos.get(index));
-        if (file.exists()) {
-            file.delete();
-
-            // Continue only if the File was successfully deleted
-            Toast.makeText(getApplicationContext(), "This image has been removed from the SD Card",
-                    Toast.LENGTH_SHORT).show();
-            index = 0;
-            updatePhotos();
-
-        } else {
-            Toast.makeText(getApplicationContext(), "File not found",
-                    Toast.LENGTH_SHORT).show();
-        }
-
-        return file;
+    public void openFragment(Fragment fragment) {
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.container, fragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
     }
+
+    BottomNavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener =
+            new BottomNavigationView.OnNavigationItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                    switch (item.getItemId()) {
+                        case R.id.navigation_home:
+                            openFragment(HomeFragment.newInstance("", ""));
+                            return true;
+                        case R.id.navigation_search:
+                            searchPhoto();
+                            return true;
+                        case R.id.navigation_camera:
+                            takePhoto();
+                            return true;
+                        case R.id.navigation_upload:
+                            sharingToSocialMedia();
+                            return true;
+                    }
+                    return false;
+                }
+            };
 
     private void updatePhotos() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -140,36 +151,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
             displayPhoto(null);
         } else {
             displayPhoto(photos.get(index));
-        }
-    }
-
-    private void saveToSQLiteDatabase() {
-        try {
-            // ImageView iv = (ImageView) findViewById(R.id.ivGallery);
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            byte[] byteImage = bos.toByteArray();
-
-            //to write in a database
-            db = mdb.getWritableDatabase();
-            ContentValues cv = new ContentValues();
-            cv.put("name", "temp" + index + ".png");
-            cv.put("image", byteImage);
-            db.insert("tableimage", null, cv);
-            String selectQuery = "SELECT * FROM tableimage";
-            c = db.rawQuery(selectQuery, null);
-            if (c != null) {
-                c.moveToFirst();
-                do {
-                    img1 = c.getBlob(1);
-                    String name = c.getString(0);
-                } while (c.moveToNext());
-            }
-            //Bitmap b1 = BitmapFactory.decodeByteArray(img1, 0, img1.length);
-            //iv.setImageBitmap(b1);
-            Toast.makeText(getApplicationContext(), "This image has been saved to the Android SQLite database",
-                    Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -190,25 +171,33 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
 
     public void sharingToSocialMedia() {
 
-        try {
-            File file = new File(photos.get(index));
-            Uri bmpUri = FileProvider.getUriForFile(this, "com.example.photoApp.fileprovider", file);
-            //Todo: Commenting this out for now, uncomment it to show it the Caption as well, works on Twitter
+        if (photos.size() == 0) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Nothing to upload!")
+                    .setMessage("")
+                    .show();
+        } else {
+
+            try {
+                File file = new File(photos.get(index));
+                Uri bmpUri = FileProvider.getUriForFile(this, "com.example.photoApp.fileprovider", file);
+
 //            EditText mEdit   = (EditText)findViewById(R.id.etCaption);
 //            String text = mEdit.getText().toString();
 
-            Intent shareIntent = new Intent();
-            shareIntent.setAction(Intent.ACTION_SEND);
+                Intent shareIntent = new Intent();
+                shareIntent.setAction(Intent.ACTION_SEND);
 //            shareIntent.putExtra(Intent.EXTRA_TEXT, text);
-            shareIntent.putExtra(Intent.EXTRA_STREAM, bmpUri);
-            shareIntent.setType("image/*");
-            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(Intent.createChooser(shareIntent, "Share images using"));
+                shareIntent.putExtra(Intent.EXTRA_STREAM, bmpUri);
+                shareIntent.setType("image/*");
+                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(Intent.createChooser(shareIntent, "Share images using"));
 
-        } catch (android.content.ActivityNotFoundException ex) {
-            Toast.makeText(getApplicationContext(), "Please install the application first", Toast.LENGTH_LONG).show();
+            } catch (android.content.ActivityNotFoundException ex) {
+                Toast.makeText(getApplicationContext(), "Please install the application first", Toast.LENGTH_LONG).show();
+
+            }
         }
-
     }
 
     @LogAnnotation
@@ -233,12 +222,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
             Uri photoURI = FileProvider.getUriForFile(this, "com.example.photoApp.fileprovider", photoFile);
             takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-            new AlertDialog.Builder(this)
-                    .setTitle("Picture snapped succesfully and saved!")
-                    .setMessage("Saved to SD card.")
-                    .show();
         }
-        //}
     }
 
     @LogAnnotation
@@ -339,7 +323,12 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             ImageView mImageView = (ImageView) findViewById(R.id.ivGallery);
             mImageView.setImageBitmap(BitmapFactory.decodeFile(mCurrentPhotoPath));
-            photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(), "");
+            updatePhotos();
+            new AlertDialog.Builder(this)
+                    .setTitle("Picture snapped succesfully and saved!")
+                    .setMessage("Saved to SD card.")
+                    .show();
+            //photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(), "");
         }
         if (requestCode == 10) {
             if (resultCode == RESULT_OK && data != null) {
@@ -357,12 +346,11 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
                     takePhoto();
                 } else if (command.contains("share")) {
                     sharingToSocialMedia();
-                } else if (command.contains("favourite")) {
-                    saveToSQLiteDatabase();
-                } else if (command.contains("remove")) {
-                    removeImageFromSDCard();
+//                } else if (command.contains("favourite")) {
+//                    saveToSQLiteDatabase();
+//                } else if (command.contains("remove")) {
+//                    removeImageFromSDCard();
                 } else {
-
                 }
             }
         }
@@ -377,7 +365,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         try {
             startActivityForResult(intent, 10);
         } catch (Exception e) {
-            Toast.makeText(this, "Your Device Don't Support Speech Input", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Your Device Doesn't Support Speech Input", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -451,5 +439,75 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         }
 
         return true;
+    }
+
+    public void saveToSQLiteDatabase(View view) {
+
+        if (photos.size() == 0) {
+            new AlertDialog.Builder(this)
+                    .setTitle("File doesn't exist!")
+                    .setMessage("")
+                    .show();
+        } else {
+            try {
+                // ImageView iv = (ImageView) findViewById(R.id.ivGallery);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                byte[] byteImage = bos.toByteArray();
+
+                //to write in a database
+                db = mdb.getWritableDatabase();
+                ContentValues cv = new ContentValues();
+                cv.put("name", "temp" + index + ".png");
+                cv.put("image", byteImage);
+                db.insert("tableimage", null, cv);
+                String selectQuery = "SELECT * FROM tableimage";
+                c = db.rawQuery(selectQuery, null);
+                if (c != null) {
+                    c.moveToFirst();
+                    do {
+                        img1 = c.getBlob(1);
+                        String name = c.getString(0);
+                    } while (c.moveToNext());
+                }
+                //Bitmap b1 = BitmapFactory.decodeByteArray(img1, 0, img1.length);
+                //iv.setImageBitmap(b1);
+                new AlertDialog.Builder(this)
+                        .setTitle("Picture saved successfully!")
+                        .setMessage("Saved to Android SQLite database.")
+                        .show();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public File removeImageFromSDCard(View view) {
+        File file = null;
+        if (photos.size() == 0) {
+            new AlertDialog.Builder(this)
+                    .setTitle("File doesn't exist!")
+                    .setMessage("")
+                    .show();
+        } else {
+            file = new File(photos.get(index));
+            if (file.exists()) {
+                file.delete();
+
+                // Continue only if the File was successfully deleted
+                new AlertDialog.Builder(this)
+                        .setTitle("Picture removed successfully!")
+                        .setMessage("Removed from the SD Card.")
+                        .show();
+                index = 0;
+                updatePhotos();
+
+            } else {
+                new AlertDialog.Builder(this)
+                        .setTitle("File not found!")
+                        .setMessage("")
+                        .show();
+            }
+        }
+        return file;
     }
 }

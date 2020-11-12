@@ -1,6 +1,5 @@
 package com.example.photoApp.view;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -16,6 +15,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
@@ -24,13 +24,11 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.speech.RecognizerIntent;
 import android.view.GestureDetector;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.TranslateAnimation;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -43,8 +41,8 @@ import com.example.photoApp.presenter.HomeFragment;
 import com.example.photoApp.presenter.MainActivityPresenter;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -52,7 +50,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
-public class MainActivity<file> extends AppCompatActivity implements MainActivityPresenter.View, GestureDetector.OnGestureListener {
+public class MainActivity extends AppCompatActivity implements MainActivityPresenter.View, GestureDetector.OnGestureListener {
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int SEARCH_ACTIVITY_REQUEST_CODE = 2;
@@ -65,8 +63,6 @@ public class MainActivity<file> extends AppCompatActivity implements MainActivit
     private static final int SWIPE_MIN_DISTANCE = 120;
     private static final int SWIPE_MAX_OFF_PATH = 250;
     private static final int SWIPE_VELOCITY_THRESHOLD = 200;
-
-    Button btn_favourite, btn_remove;
 
     DatabaseHelper mdb;
     SQLiteDatabase db;
@@ -102,12 +98,6 @@ public class MainActivity<file> extends AppCompatActivity implements MainActivit
 
         gestureScanner = new GestureDetector(getBaseContext(), this);
 
-//        btn_favourite = findViewById(R.id.btnFavourite);
-//        btn_favourite.setOnClickListener(v -> saveToSQLiteDatabase());
-//
-//        btn_remove = findViewById(R.id.btnRemove);
-//        btn_remove.setOnClickListener(v -> removeImageFromSDCard());
-
         checkPermissions();
 
         updatePhotos();
@@ -122,25 +112,22 @@ public class MainActivity<file> extends AppCompatActivity implements MainActivit
     }
 
     BottomNavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener =
-            new BottomNavigationView.OnNavigationItemSelectedListener() {
-                @Override
-                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                    switch (item.getItemId()) {
-                        case R.id.navigation_home:
-                            openFragment(HomeFragment.newInstance("", ""));
-                            return true;
-                        case R.id.navigation_search:
-                            searchPhoto();
-                            return true;
-                        case R.id.navigation_camera:
-                            takePhoto();
-                            return true;
-                        case R.id.navigation_upload:
-                            sharingToSocialMedia();
-                            return true;
-                    }
-                    return false;
+            item -> {
+                switch (item.getItemId()) {
+                    case R.id.navigation_home:
+                        openFragment(HomeFragment.newInstance("", ""));
+                        return true;
+                    case R.id.navigation_search:
+                        searchPhoto();
+                        return true;
+                    case R.id.navigation_camera:
+                        takePhoto();
+                        return true;
+                    case R.id.navigation_upload:
+                        sharingToSocialMedia();
+                        return true;
                 }
+                return false;
             };
 
     private void updatePhotos() {
@@ -171,13 +158,7 @@ public class MainActivity<file> extends AppCompatActivity implements MainActivit
 
     public void sharingToSocialMedia() {
 
-        if (photos.size() == 0) {
-            new AlertDialog.Builder(this)
-                    .setTitle("Nothing to upload!")
-                    .setMessage("")
-                    .show();
-        } else {
-
+        if (checkIfAnyPhotoIsPresent()) {
             try {
                 File file = new File(photos.get(index));
                 Uri bmpUri = FileProvider.getUriForFile(this, "com.example.photoApp.fileprovider", file);
@@ -279,7 +260,7 @@ public class MainActivity<file> extends AppCompatActivity implements MainActivit
             String[] attr = path.split("_");
             et.setText(attr[1]);
             tv.setText(attr[2]);
-            addLocationTagging(path);
+            //addLocationTagging(path);
         }
     }
 
@@ -346,10 +327,6 @@ public class MainActivity<file> extends AppCompatActivity implements MainActivit
                     takePhoto();
                 } else if (command.contains("share")) {
                     sharingToSocialMedia();
-//                } else if (command.contains("favourite")) {
-//                    saveToSQLiteDatabase();
-//                } else if (command.contains("remove")) {
-//                    removeImageFromSDCard();
                 } else {
                 }
             }
@@ -442,24 +419,23 @@ public class MainActivity<file> extends AppCompatActivity implements MainActivit
     }
 
     public void saveToSQLiteDatabase(View view) {
-
-        if (photos.size() == 0) {
-            new AlertDialog.Builder(this)
-                    .setTitle("File doesn't exist!")
-                    .setMessage("")
-                    .show();
-        } else {
+        if (checkIfAnyPhotoIsPresent()) {
             try {
-                // ImageView iv = (ImageView) findViewById(R.id.ivGallery);
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                byte[] byteImage = bos.toByteArray();
+                ImageView iv = (ImageView) findViewById(R.id.ivGallery);
 
                 //to write in a database
                 db = mdb.getWritableDatabase();
+                FileInputStream fs = new FileInputStream(photos.get(index));
+                byte[] byteImage = new byte[fs.available()];
+                fs.read(byteImage);
+
                 ContentValues cv = new ContentValues();
                 cv.put("name", "temp" + index + ".png");
                 cv.put("image", byteImage);
                 db.insert("tableimage", null, cv);
+                fs.close();
+
+                // retrieve image from the database
                 String selectQuery = "SELECT * FROM tableimage";
                 c = db.rawQuery(selectQuery, null);
                 if (c != null) {
@@ -469,8 +445,10 @@ public class MainActivity<file> extends AppCompatActivity implements MainActivit
                         String name = c.getString(0);
                     } while (c.moveToNext());
                 }
-                //Bitmap b1 = BitmapFactory.decodeByteArray(img1, 0, img1.length);
-                //iv.setImageBitmap(b1);
+
+                Bitmap b1 = BitmapFactory.decodeByteArray(img1, 0, img1.length);
+                iv.setImageBitmap(b1);
+
                 new AlertDialog.Builder(this)
                         .setTitle("Picture saved successfully!")
                         .setMessage("Saved to Android SQLite database.")
@@ -481,14 +459,25 @@ public class MainActivity<file> extends AppCompatActivity implements MainActivit
         }
     }
 
-    public File removeImageFromSDCard(View view) {
-        File file = null;
+    public boolean checkIfAnyPhotoIsPresent() {
+        boolean photoPresent = false;
+
         if (photos.size() == 0) {
             new AlertDialog.Builder(this)
-                    .setTitle("File doesn't exist!")
-                    .setMessage("")
+                    .setTitle("Image file doesn't exist!")
+                    .setMessage("There are no photos in the collection")
                     .show();
         } else {
+            photoPresent = true;
+        }
+        return photoPresent;
+
+    }
+
+    public File removeImageFromSDCard(View view) {
+        File file = null;
+        if (checkIfAnyPhotoIsPresent()) {
+
             file = new File(photos.get(index));
             if (file.exists()) {
                 file.delete();
@@ -501,11 +490,6 @@ public class MainActivity<file> extends AppCompatActivity implements MainActivit
                 index = 0;
                 updatePhotos();
 
-            } else {
-                new AlertDialog.Builder(this)
-                        .setTitle("File not found!")
-                        .setMessage("")
-                        .show();
             }
         }
         return file;

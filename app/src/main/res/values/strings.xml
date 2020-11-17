@@ -1,5 +1,13 @@
 <resources>
     <string name="app_name">photoApp</string>
+    <string name="current_displayed_image">Current Displayed Image</string>
+    <string name="caption">Caption:</string>
+    <string name="timestamp">Timestamp:</string>
+    <string name="prev">prev</string>
+    <string name="next">next</string>
+    <string name="favourite">Favourite</string>
+    <string name="remove">Remove</string>
+    <string name="image_gallery">Image Gallery</string>
 
     <string-array name="navigation_drawer_items_array">
         <item>Home</item>

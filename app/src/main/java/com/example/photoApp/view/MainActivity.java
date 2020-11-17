@@ -29,6 +29,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.TranslateAnimation;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -37,7 +38,6 @@ import android.widget.Toast;
 import com.example.photoApp.LogAnnotation;
 import com.example.photoApp.R;
 import com.example.photoApp.model.DatabaseHelper;
-import com.example.photoApp.presenter.HomeFragment;
 import com.example.photoApp.presenter.MainActivityPresenter;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -57,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
     String mCurrentPhotoPath;
     private ArrayList<String> photos = null;
     private int index = 0;
+
+    Button btn_favourite, btn_remove;
 
     BottomNavigationView bottomNavigation;
 
@@ -84,7 +86,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
 
         bottomNavigation = findViewById(R.id.bottom_navigation);
         bottomNavigation.setOnNavigationItemSelectedListener(navigationItemSelectedListener);
-        openFragment(HomeFragment.newInstance("", ""));
 
         mdb = new DatabaseHelper(getApplicationContext(), "tempDB", null, 1);
         this.deleteDatabase("tempDB");
@@ -97,6 +98,12 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         mPresenter = new MainActivityPresenter(this);
 
         gestureScanner = new GestureDetector(getBaseContext(), this);
+
+        btn_favourite = findViewById(R.id.btnFavourite);
+        btn_favourite.setOnClickListener(v -> saveToSQLiteDatabase());
+
+        btn_remove = findViewById(R.id.btnRemove);
+        btn_remove.setOnClickListener(v -> removeImageFromSDCard());
 
         checkPermissions();
 
@@ -115,7 +122,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
             item -> {
                 switch (item.getItemId()) {
                     case R.id.navigation_home:
-                        openFragment(HomeFragment.newInstance("", ""));
                         return true;
                     case R.id.navigation_search:
                         searchPhoto();
@@ -327,7 +333,12 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
                     takePhoto();
                 } else if (command.contains("share")) {
                     sharingToSocialMedia();
+                } else if (command.contains("favourite")) {
+                    saveToSQLiteDatabase();
+                } else if (command.contains("remove")) {
+                    removeImageFromSDCard();
                 } else {
+
                 }
             }
         }
@@ -346,23 +357,12 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         }
     }
 
-    private void addLocationTagging(String path) {
-        mPresenter.extractLocationCoordinates(path);
-    }
-
 
     @Override
     public void updatePhoto(String path, String caption) {
         mPresenter.updatePhoto(path, caption, photos, index);
     }
 
-    @Override
-    public void showLatitudeAndLongitude(Double latitude, Double longitude) {
-        // TextView latitudeField = (TextView) findViewById(R.id.tvLatitude);
-        // TextView longitudeField = (TextView) findViewById(R.id.tvLongitude);
-        // latitudeField.setText(String.format(Locale.CANADA,"Latitude: %.6f",latitude));
-        //  longitudeField.setText(String.format(Locale.CANADA,"Longitude: %.6f",longitude));
-    }
 
     @Override
     public boolean onTouchEvent(MotionEvent me) {
@@ -418,7 +418,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         return true;
     }
 
-    public void saveToSQLiteDatabase(View view) {
+    public void saveToSQLiteDatabase() {
         if (checkIfAnyPhotoIsPresent()) {
             try {
                 ImageView iv = (ImageView) findViewById(R.id.ivGallery);
@@ -448,6 +448,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
 
                 Bitmap b1 = BitmapFactory.decodeByteArray(img1, 0, img1.length);
                 iv.setImageBitmap(b1);
+                //btn_favourite.setEnabled(false);
 
                 new AlertDialog.Builder(this)
                         .setTitle("Picture saved successfully!")
@@ -474,7 +475,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
 
     }
 
-    public File removeImageFromSDCard(View view) {
+    public File removeImageFromSDCard() {
         File file = null;
         if (checkIfAnyPhotoIsPresent()) {
 

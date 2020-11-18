@@ -312,7 +312,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
             mImageView.setImageBitmap(BitmapFactory.decodeFile(mCurrentPhotoPath));
             updatePhotos();
             new AlertDialog.Builder(this)
-                    .setTitle("Picture snapped succesfully and saved!")
+                    .setTitle("Picture snapped successfully and saved!")
                     .setMessage("Saved to SD card.")
                     .show();
             //photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(), "");
@@ -338,7 +338,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
                 } else if (command.contains("remove")) {
                     removeImageFromSDCard();
                 } else {
-
+                    Toast.makeText(this, "Your Command Was Not Recognized", Toast.LENGTH_SHORT).show();
                 }
             }
         }

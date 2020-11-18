@@ -61,6 +61,25 @@ public class UITest {
     }
 
     @Test
+    public void testSwipePrevious_NoPreviousPhoto(){
+        //Select Previous (Should stay on Cat as this is the first photo)
+        onView(withId(R.id.ivGallery)).perform(swipeRight());
+        onView(withId(R.id.etCaption)).check(matches(withText("Cat"))); //Update to details from first picture in list
+        onView(withId(R.id.tvTimestamp)).check(matches(withText(containsString("164720")))); //Update to details from first picture
+    }
+
+    @Test
+    public void testSwipeNext_NoLastPhoto(){
+        //Select Previous (Should stay on Cat as this is the first photo)
+        onView(withId(R.id.ivGallery)).perform(swipeLeft());
+        onView(withId(R.id.ivGallery)).perform(swipeLeft());
+        onView(withId(R.id.ivGallery)).perform(swipeLeft());
+        onView(withId(R.id.ivGallery)).perform(swipeLeft());
+        onView(withId(R.id.etCaption)).check(matches(withText("sofa"))); //Update to details from first picture in list
+        onView(withId(R.id.tvTimestamp)).check(matches(withText(containsString("213710")))); //Update to details from first picture
+    }
+
+    @Test
     public void testScrollPhotos(){
         //Select Next
         onView(withId(R.id.btnNext)).perform(click());

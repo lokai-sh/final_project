@@ -109,6 +109,39 @@ public class UITest {
         onView(withId(R.id.etCaption)).check(matches(withText("sofa"))); //Update to details from first picture in list
         onView(withId(R.id.tvTimestamp)).check(matches(withText(containsString("213710")))); //Update to details from first picture
     }
-    
+
+    @Test
+    public void searchForAnImageUsingUpperCaseCaptionFilter(){
+        onView(withId(R.id.navigation_search)).perform(click());
+        onView(withId(R.id.etFromDateTime)).perform(clearText());
+        onView(withId(R.id.etToDateTime)).perform(clearText());
+        onView(withId(R.id.etKeywords)).perform(typeText("SOFA"), closeSoftKeyboard());
+        onView(withId(R.id.go)).perform(click());
+        onView(withId(R.id.etCaption)).check(matches(withText("sofa")));
+        onView(withId(R.id.tvTimestamp)).check(matches(withText(containsString("213710"))));
+    }
+
+    @Test
+    public void searchForAnImageUsingLowerCaseCaptionFilter(){
+        onView(withId(R.id.navigation_search)).perform(click());
+        onView(withId(R.id.etFromDateTime)).perform(clearText());
+        onView(withId(R.id.etToDateTime)).perform(clearText());
+        onView(withId(R.id.etKeywords)).perform(typeText("sofa"), closeSoftKeyboard());
+        onView(withId(R.id.go)).perform(click());
+        onView(withId(R.id.etCaption)).check(matches(withText("sofa")));
+        onView(withId(R.id.tvTimestamp)).check(matches(withText(containsString("213710"))));
+    }
+
+    @Test
+    public void searchForAnImageUsingProperCaseCaptionFilter(){
+        onView(withId(R.id.navigation_search)).perform(click());
+        onView(withId(R.id.etFromDateTime)).perform(clearText());
+        onView(withId(R.id.etToDateTime)).perform(clearText());
+        onView(withId(R.id.etKeywords)).perform(typeText("Sofa"), closeSoftKeyboard());
+        onView(withId(R.id.go)).perform(click());
+        onView(withId(R.id.etCaption)).check(matches(withText("sofa")));
+        onView(withId(R.id.tvTimestamp)).check(matches(withText(containsString("213710"))));
+    }
+
 }
 

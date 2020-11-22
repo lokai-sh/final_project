@@ -42,7 +42,7 @@ private final View view;
             fList.forEach(f -> {
                 if (((startTimestamp == null && endTimestamp == null) || (f.lastModified() >= startTimestamp.getTime()
                         && f.lastModified() <= endTimestamp.getTime())
-                ) && (keywords.equals("") || f.getPath().contains(keywords)))
+                ) && (keywords.equals("") || f.getPath().toUpperCase().contains(keywords.toUpperCase())))
                     photos.add(f.getPath());
             });
         }

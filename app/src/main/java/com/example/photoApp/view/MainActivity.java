@@ -331,7 +331,8 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
                     searchPhoto();
                 } else if (command.contains("snap")) {
                     takePhoto();
-                } else if (command.contains("share")) {
+                //} else if (command.contains("share")) {
+                } else if (command.contains("send")) {
                     sharingToSocialMedia();
                 } else if (command.contains("favourite")) {
                     saveToSQLiteDatabase();

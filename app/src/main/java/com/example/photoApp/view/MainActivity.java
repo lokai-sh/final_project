@@ -38,6 +38,7 @@ import android.widget.Toast;
 import com.example.photoApp.LogAnnotation;
 import com.example.photoApp.R;
 import com.example.photoApp.model.DatabaseHelper;
+import com.example.photoApp.model.Picture;
 import com.example.photoApp.presenter.MainActivityPresenter;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -55,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int SEARCH_ACTIVITY_REQUEST_CODE = 2;
     String mCurrentPhotoPath;
-    private ArrayList<String> photos = null;
+    private ArrayList<Picture> pictures = null;
     private int index = 0;
 
     Button btn_favourite, btn_remove;
@@ -138,12 +139,12 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
 
     private void updatePhotos() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(), "");
+            pictures = mPresenter.findPictures(new Date(Long.MIN_VALUE), new Date(), "");
         }
-        if (photos.size() == 0) {
-            displayPhoto(null);
+        if (pictures.size() == 0) {
+            displayPicture(null);
         } else {
-            displayPhoto(photos.get(index));
+            displayPicture(pictures.get(index));
         }
     }
 
@@ -166,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
 
         if (checkIfAnyPhotoIsPresent()) {
             try {
-                File file = new File(photos.get(index));
+                File file = new File(pictures.get(index).getFilepath());
                 Uri bmpUri = FileProvider.getUriForFile(this, "com.example.photoApp.fileprovider", file);
 
 //            EditText mEdit   = (EditText)findViewById(R.id.etCaption);
@@ -214,8 +215,8 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
 
     @LogAnnotation
     public void scrollPhotos(View v) {
-        if (photos.size() != 0) {
-            updatePhoto(photos.get(index), ((EditText) findViewById(R.id.etCaption)).getText().toString());
+        if (pictures.size() != 0) {
+            updatePicture(pictures.get(index), ((EditText) findViewById(R.id.etCaption)).getText().toString());
             switch (v.getId()) {
                 case R.id.btnPrev:
                     scrollImageToPrevious();
@@ -230,14 +231,14 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
     }
 
     public void scrollImageToNext() {
-        if (index < (photos.size() - 1)) {
+        if (index < (pictures.size() - 1)) {
             index++;
         }
 
         ImageView iv = (ImageView) findViewById(R.id.ivGallery);
         iv.startAnimation(animMove);
 
-        displayPhoto(photos.get(index));
+        displayPicture(pictures.get(index));
     }
 
     public void scrollImageToPrevious() {
@@ -250,23 +251,21 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         animate.setFillAfter(true);
         iv.startAnimation(animate);
 
-        displayPhoto(photos.get(index));
+        displayPicture(pictures.get(index));
     }
 
-    private void displayPhoto(String path) {
+    private void displayPicture(Picture picture) {
         ImageView iv = (ImageView) findViewById(R.id.ivGallery);
         TextView tv = (TextView) findViewById(R.id.tvTimestamp);
         EditText et = (EditText) findViewById(R.id.etCaption);
-        if (path == null || path.equals("")) {
+        if (picture == null || picture.getFilepath() == null || picture.getFilepath().equals("")) {
             iv.setImageResource(R.mipmap.ic_launcher);
             et.setText("");
             tv.setText("");
         } else {
-            iv.setImageBitmap(BitmapFactory.decodeFile(path));
-            String[] attr = path.split("_");
-            et.setText(attr[1]);
-            tv.setText(attr[2]);
-            //addLocationTagging(path);
+            iv.setImageBitmap(BitmapFactory.decodeFile(picture.getFilepath()));
+            et.setText(picture.getCaption());
+            tv.setText(picture.getTimeStamp());
         }
     }
 
@@ -299,11 +298,11 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
                 }
                 String keywords = (String) data.getStringExtra("KEYWORDS");
                 index = 0;
-                photos = mPresenter.findPhotos(startTimestamp, endTimestamp, keywords);
-                if (photos.size() == 0) {
-                    displayPhoto(null);
+                pictures = mPresenter.findPictures(startTimestamp, endTimestamp, keywords);
+                if (pictures.size() == 0) {
+                    displayPicture(null);
                 } else {
-                    displayPhoto(photos.get(index));
+                    displayPicture(pictures.get(index));
                 }
             }
         }
@@ -315,7 +314,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
                     .setTitle("Picture snapped successfully and saved!")
                     .setMessage("Saved to SD card.")
                     .show();
-            //photos = mPresenter.findPhotos(new Date(Long.MIN_VALUE), new Date(), "");
         }
         if (requestCode == 10) {
             if (resultCode == RESULT_OK && data != null) {
@@ -331,7 +329,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
                     searchPhoto();
                 } else if (command.contains("snap")) {
                     takePhoto();
-                //} else if (command.contains("share")) {
                 } else if (command.contains("send")) {
                     sharingToSocialMedia();
                 } else if (command.contains("favourite")) {
@@ -358,12 +355,11 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         }
     }
 
-
     @Override
-    public void updatePhoto(String path, String caption) {
-        mPresenter.updatePhoto(path, caption, photos, index);
+    public void updatePicture(Picture picture, String caption) {
+        //mPresenter.updatePicture(picture, caption, pictures, index);
+        mPresenter.updatePicture(picture, caption);
     }
-
 
     @Override
     public boolean onTouchEvent(MotionEvent me) {
@@ -426,7 +422,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
 
                 //to write in a database
                 db = mdb.getWritableDatabase();
-                FileInputStream fs = new FileInputStream(photos.get(index));
+                FileInputStream fs = new FileInputStream(pictures.get(index).getFilepath());
                 byte[] byteImage = new byte[fs.available()];
                 fs.read(byteImage);
 
@@ -464,7 +460,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
     public boolean checkIfAnyPhotoIsPresent() {
         boolean photoPresent = false;
 
-        if (photos.size() == 0) {
+        if (pictures.size() == 0) {
             new AlertDialog.Builder(this)
                     .setTitle("Image file doesn't exist!")
                     .setMessage("There are no photos in the collection")
@@ -480,7 +476,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityPrese
         File file = null;
         if (checkIfAnyPhotoIsPresent()) {
 
-            file = new File(photos.get(index));
+            file = new File(pictures.get(index).getFilepath());
             if (file.exists()) {
                 file.delete();
 

@@ -1,13 +1,13 @@
 package com.example.photoApp.presenter;
 
-import android.media.ExifInterface;
 import android.os.Build;
 import android.os.Environment;
 
 import androidx.annotation.RequiresApi;
 
+import com.example.photoApp.model.Picture;
+
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -21,21 +21,24 @@ private final View view;
         this.view = view;
     }
 
-    public void updatePhoto(String path, String caption, ArrayList<String> photos, int index) {
+    //public void updatePicture(Picture picture, String caption, ArrayList<Picture> pictures, int index) {
+    public void updatePicture(Picture picture, String caption) {
+        String path = picture.getFilepath();
         String[] attr = path.split("_");
         if (attr.length >= 3) {
             File to = new File(attr[0] + "_" + caption + "_" + attr[2] + "_" + attr[3]);
             File from = new File(path);
             from.renameTo(to);
-            photos.set(index, to.toString());
+            //pictures.get(index).setFilepath(to.toString());
+            picture.setFilepath(to.toString());
         }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public ArrayList<String> findPhotos(Date startTimestamp, Date endTimestamp, String keywords) {
+    public ArrayList<Picture> findPictures(Date startTimestamp, Date endTimestamp, String keywords) {
         File file = new File(Environment.getExternalStorageDirectory()
                 .getAbsolutePath(), "/Android/data/com.example.photoApp/files/Pictures");
-        ArrayList<String> photos = new ArrayList<String>();
+        ArrayList<Picture> pictures = new ArrayList<Picture>();
         if (file.listFiles() != null){
             ArrayList<File> fList = new ArrayList<File>(Arrays.asList(Objects.requireNonNull(file.listFiles())));
             // Functional lambda expression
@@ -43,14 +46,15 @@ private final View view;
                 if (((startTimestamp == null && endTimestamp == null) || (f.lastModified() >= startTimestamp.getTime()
                         && f.lastModified() <= endTimestamp.getTime())
                 ) && (keywords.equals("") || f.getPath().toUpperCase().contains(keywords.toUpperCase())))
-                    photos.add(f.getPath());
+                    pictures.add(new Picture(f.getPath()));
             });
         }
-        return photos;
+        return pictures;
     }
 
     public interface View {
-        void updatePhoto(String path, String caption);
+        //void updatePicture(String path, String caption);
+        void updatePicture(Picture picture, String caption);
     }
 }
 
